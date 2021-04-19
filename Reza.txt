@@ -1,0 +1,2 @@
+sudo ./waf --run "scratch/MultiCoreSimulator --CfgFile=./src/MultiCoreSim/test/piscot/piscot_tc17.xml --BMsPath=/home/rmirosan/Dropbox/Papers/RTSS2021/cachesim-master/BM" >dump.txt
+

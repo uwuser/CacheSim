@@ -414,6 +414,7 @@ namespace ns3 {
      }
      return PendingTxReq;
    }
+   
    bool BusArbiter::CheckPendingWB (uint16_t core_idx, BusIfFIFO::BusRespMsg & wbMsg, bool CheckOnly = false) {
      std::list<Ptr<BusIfFIFO>>::iterator it1 = m_busIfFIFO.begin();
      std::advance(it1, core_idx);
@@ -1293,9 +1294,17 @@ namespace ns3 {
       }
     }
 
-void BusArbiter::RR_RT_RespBus(){     /* Response Bus Arbiter for the RT Controller */
-
-}
+    void BusArbiter::RR_RT_RespBus(){     /* Response Bus Arbiter for the RT Controller */
+      if (m_PndResp || m_FcFsPndMemResp) 
+      {
+        m_FcFsPndMemResp = (m_FcFsPndMemResp == true) ? FcFsMemCheckInsert       (m_respCoreCnt, m_ServQueueMsg.addr, false) :
+                                                        FcFsWriteBackCheckInsert (m_respCoreCnt, m_ServQueueMsg.addr, false, m_PendResp);
+        if ((m_cach2Cache == false &&  ((m_PndResp == false) || (m_ServQueueMsg.cohrMsgId == SNOOPPrivCohTrans::PutMTrans))) 
+            || (m_cach2Cache == true &&  ((m_PndResp == false) || (m_PndResp == true && m_PendResp.reqCoreId != m_sharedCacheBusIfFIFO->m_fifo_id) || (m_ServQueueMsg.cohrMsgId == SNOOPPrivCohTrans::PutMTrans)))) {
+          m_GlobalReqFIFO.PopElement();
+        }
+      }
+    }
 
 
 

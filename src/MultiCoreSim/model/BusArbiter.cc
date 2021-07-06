@@ -395,7 +395,7 @@ namespace ns3 {
      int pendingQueueSize = m_GlobalReqFIFO.GetQueueSize();
      if (!(*it1)->m_txMsgFIFO.IsEmpty())
      {       
-       for (unsigned int iterator = 1; (iterator < (*it1)->m_txMsgFIFO.GetQueueSize() && candidate_chosen == true) ; iterator++)
+       for (int iterator = 1; iterator < (*it1)->m_txMsgFIFO.GetQueueSize() && candidate_chosen == true ; iterator++)
        {
          PendingTxReq = true;
          txMsg = (*it1)->m_txMsgFIFO.GetElement(iterator);
@@ -404,7 +404,7 @@ namespace ns3 {
           {
             txResp = m_GlobalReqFIFO.GetElement(j);
             m_GlobalReqFIFO.PopElement();
-            if (it1 == txResp.reqCoreId) { /*************** NEEDS MODIFICATION SINCE NOW WE HAVE MORE BANKS! HENCE, WE SHOULD CHECK IF THAT RESPONSE IS FOR THAT SPECIFIC BANK OR NOT? CORRECT? ***************/
+            if (txMsg.reqCoreId == txResp.reqCoreId) { /*************** NEEDS MODIFICATION SINCE NOW WE HAVE MORE BANKS! HENCE, WE SHOULD CHECK IF THAT RESPONSE IS FOR THAT SPECIFIC BANK OR NOT? CORRECT? ***************/
               PendingTxReq = false;
             }
             m_GlobalReqFIFO.InsertElement(txResp);
@@ -1168,14 +1168,16 @@ namespace ns3 {
       }
     } //void BusArbiter::PMSI_FcFsRespBus() 
 //^^^^^^^^^^^^^^^^^^^^^^^NOT REWIEWD FOR NOW^^^^^^^^^^^^^^^^^^^^^^^^^^// 
-    void BusArbiter::PISCOT_MSI_FcFsResBus() {
+    void BusArbiter::PISCOT_MSI_FcFsResBus() {  /****** FcFsMemCheckInsert checks If the shared memory can send data on the bus, while the WriteBackCheckInsert checks whether the core can send data on the bus.******/
       if (m_PndResp || m_FcFsPndMemResp) 
       {
-        m_FcFsPndMemResp = (m_FcFsPndMemResp == true) ? FcFsMemCheckInsert       (m_respCoreCnt, m_ServQueueMsg.addr, false) :
+        m_FcFsPndMemResp = (m_FcFsPndMemResp == true) ? FcFsMemCheckInsert       (m_respCoreCnt, m_ServQueueMsg.addr, false) :  
                                                         FcFsWriteBackCheckInsert (m_respCoreCnt, m_ServQueueMsg.addr, false, m_PendResp);
+
         if ((m_cach2Cache == false &&  ((m_PndResp == false) || (m_ServQueueMsg.cohrMsgId == SNOOPPrivCohTrans::PutMTrans))) 
-            || (m_cach2Cache == true &&  ((m_PndResp == false) || (m_PndResp == true && m_PendResp.reqCoreId != m_sharedCacheBusIfFIFO->m_fifo_id) || (m_ServQueueMsg.cohrMsgId == SNOOPPrivCohTrans::PutMTrans)))) {
-          m_GlobalReqFIFO.PopElement();
+            || (m_cach2Cache == true &&  ((m_PndResp == false) || (m_PndResp == true && m_PendResp.reqCoreId != m_sharedCacheBusIfFIFO->m_fifo_id) || (m_ServQueueMsg.cohrMsgId == SNOOPPrivCohTrans::PutMTrans)))) 
+            {
+             m_GlobalReqFIFO.PopElement();
         }
       } 
       
@@ -1249,7 +1251,7 @@ namespace ns3 {
       /********************* First Level of Arbitration  ************************/
       for(unsigned int RR_iterator=0; RR_iterator < Global_RR_Queue.size() && m_PndReq == false; RR_iterator++) {
         // take the order based on the RR queue
-        if(Global_RR_Queue.size() != 0) { m_reqCoreCnt = Order.at(RR_iterator)};				
+        if(Global_RR_Queue.size() != 0) { m_reqCoreCnt = Global_RR_Queue.at(RR_iterator);}				
         // check if the current candidate has a request in its local buffer
         temp_PndReq = CheckPendingReq(m_reqCoreCnt, m_ReqBusMsg, true);      
         m_PndReq    = temp_PndReq;
@@ -1263,14 +1265,14 @@ namespace ns3 {
           m_GlobalReqFIFO.InsertElement(txResp);
         }
       }
-      if(m_PndReq) {next_arb_level = fasle;} /* if a msg is picked at first level, there is no need for the second level of arbiteration. */
+      if(m_PndReq) {next_arb_level = false;} /* if a msg is picked at first level, there is no need for the second level of arbiteration. */
       /********************* Second Level of Arbitration  ************************/
       if(next_arb_level)  {
         bool temp_PndReq = false;        
         for(unsigned int RR_iterator=0; RR_iterator < Global_RR_Queue.size() && m_PndReq == false; RR_iterator++) 
         {
           // take the order based on the RR queue
-          if(Global_RR_Queue.size() != 0) { m_reqCoreCnt = Order.at(RR_iterator)};	
+          if(Global_RR_Queue.size() != 0) { m_reqCoreCnt = Global_RR_Queue.at(RR_iterator);}	
           temp_PndReq = CheckPendingReqNonOldest(m_reqCoreCnt, m_ReqBusMsg, true);  
           m_PndReq    = temp_PndReq;
           // check if that core has a pending request in the service queue
@@ -1295,13 +1297,52 @@ namespace ns3 {
     }
 
     void BusArbiter::RR_RT_RespBus(){     /* Response Bus Arbiter for the RT Controller */
-      if (m_PndResp || m_FcFsPndMemResp) 
-      {
-        m_FcFsPndMemResp = (m_FcFsPndMemResp == true) ? FcFsMemCheckInsert       (m_respCoreCnt, m_ServQueueMsg.addr, false) :
-                                                        FcFsWriteBackCheckInsert (m_respCoreCnt, m_ServQueueMsg.addr, false, m_PendResp);
+      if (m_PndResp || m_FcFsPndMemResp) {
+        if(m_FcFsPndMemResp) { // a response from memory is sent         
+          m_FcFsPndMemResp = FcFsMemCheckInsert       (m_respCoreCnt, m_ServQueueMsg.addr, false);
+          // the transaction is finished now
+          for(unsigned int h = 0; h < Global_RR_Queue.size() ; h++) {
+						if(Global_RR_Queue.at(h) == m_respCoreCnt) {
+							Global_RR_Queue.erase(Global_RR_Queue.begin() + h);
+            }
+          }              
+        }
+        else if(m_PndResp) { // a response from core is sent                   
+          m_FcFsPndMemResp = FcFsWriteBackCheckInsert (m_respCoreCnt, m_ServQueueMsg.addr, false, m_PendResp);
+          // since the transaction is a write back and it is not finihsed at this point, the global RR queue should not change
+        }
+        //m_FcFsPndMemResp = (m_FcFsPndMemResp == true) ? FcFsMemCheckInsert       (m_respCoreCnt, m_ServQueueMsg.addr, false) :
+        //                                                FcFsWriteBackCheckInsert (m_respCoreCnt, m_ServQueueMsg.addr, false, m_PendResp);
         if ((m_cach2Cache == false &&  ((m_PndResp == false) || (m_ServQueueMsg.cohrMsgId == SNOOPPrivCohTrans::PutMTrans))) 
             || (m_cach2Cache == true &&  ((m_PndResp == false) || (m_PndResp == true && m_PendResp.reqCoreId != m_sharedCacheBusIfFIFO->m_fifo_id) || (m_ServQueueMsg.cohrMsgId == SNOOPPrivCohTrans::PutMTrans)))) {
           m_GlobalReqFIFO.PopElement();
+        }
+      }
+      m_PndResp        = false;
+      m_FcFsPndMemResp = false;
+      // check service queue
+
+      if (!m_GlobalReqFIFO.IsEmpty()) 
+      {
+        for(unsigned int RR_iterator = 0; RR_iterator < Global_RR_Queue.size() && m_PndResp == false && m_FcFsPndMemResp == false; RR_iterator++) 
+        {
+          if(Global_RR_Queue.size() != 0) { m_reqCoreCnt = Global_RR_Queue.at(RR_iterator);}	
+          m_ServQueueMsg = m_GlobalReqFIFO.GetElement(m_reqCoreCnt);
+          if (m_ServQueueMsg.cohrMsgId == SNOOPPrivCohTrans::PutMTrans) {
+            m_respCoreCnt = m_ServQueueMsg.wbCoreId;
+            m_PndResp = FcFsWriteBackCheckInsert (m_respCoreCnt, m_ServQueueMsg.addr, true, m_PendResp);
+          }
+          else { // this is a memory transfer slot
+            m_respCoreCnt = m_ServQueueMsg.reqCoreId;
+            m_FcFsPndMemResp = FcFsMemCheckInsert (m_respCoreCnt, m_ServQueueMsg.addr);
+          }
+        }
+        // wait Resp-TDM response slot
+        if (m_PndResp == true || m_FcFsPndMemResp == true) {
+          Simulator::Schedule(NanoSeconds(m_dt*m_respclks), &BusArbiter::RespStep, Ptr<BusArbiter > (this));
+        }
+        else {// wait one clock cycle and check again
+            Simulator::Schedule(NanoSeconds(m_dt), &BusArbiter::RespStep, Ptr<BusArbiter > (this));
         }
       }
     }

@@ -98,6 +98,9 @@ namespace ns3 {
 
      // A pointer to Inteconnect FIFOs
     ns3::Ptr<ns3::InterConnectFIFO>  m_interConnectFIFO;
+
+    // Global Round Robin Queue 
+    vector<unsigned int> Global_RR_Queue; // RR Order queue
     
     void BusArbDecode();
     
@@ -121,6 +124,8 @@ namespace ns3 {
 
     bool CheckPendingReq  (uint16_t core_idx, BusIfFIFO::BusReqMsg & txMsg, bool CheckOnly);
 
+    bool CheckPendingReqNonOldest  (uint16_t core_idx, BusIfFIFO::BusReqMsg & txMsg, bool CheckOnly);
+
     bool InsertOnReqBus (BusIfFIFO::BusReqMsg txMsg);
 
     bool FcFsMemCheckInsert (uint16_t coreId,uint64_t addr, bool CheckOnly, bool SkipAddrCheck);
@@ -141,7 +146,7 @@ namespace ns3 {
 
     void PISCOT_MSI_FcFsResBus();
 
-    bool CheckPendingFCFSReq (BusIfFIFO::BusReqMsg & txMsg, bool ChkOnly);
+    bool CheckPendingFCFSReq (BusIfFIFO::BusReqMsg & txMsg, bool ChkOnly); 
     
     bool CheckPendingFCFSResp (BusIfFIFO::BusRespMsg & txMsg, bool ChkOnly);
     
@@ -152,6 +157,24 @@ namespace ns3 {
     void Unified_TDM_PMSI_Bus ();
     
     void Unified_TDM_PMSI_Bus2 ();
+
+    void RR_RT_ReqBus();
+
+    void RR_RT_RespBus();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   public:
     static TypeId GetTypeId(void);

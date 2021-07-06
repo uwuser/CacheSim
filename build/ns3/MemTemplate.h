@@ -89,6 +89,10 @@ namespace ns3 {
       return m_FIFO.front();
     }
 
+    T GetElement (int index) {
+      return m_FIFO.at(index);
+    }
+
     void UpdateFrontElement (T msg) {
       m_FIFO.front() = msg;
     }

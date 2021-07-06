@@ -1,7 +1,13 @@
-Waf: Entering directory `/home/rmirosan/Dropbox/Papers/RTSS2021/cachesim-master/build'
-Waf: Leaving directory `/home/rmirosan/Dropbox/Papers/RTSS2021/cachesim-master/build'
+Waf: Entering directory `/home/rmirosan/Dropbox/Papers/RTSS2021/cachesim/build'
+[200/209] Compiling src/MultiCoreSim/model/BusArbiter.cc
+[205/209] Linking build/lib/libns3-dev-MultiCoreSim-debug.so
+[206/209] Linking build/scratch/MultiCoreSimulator
+[207/209] Linking build/utils/ns3-dev-test-runner-debug
+[208/209] Creating pcfile: src/MultiCoreSim/libns3-dev-MultiCoreSim-debug.pc
+[209/209] Creating pcfile: src/core/libns3-dev-core-debug.pc
+Waf: Leaving directory `/home/rmirosan/Dropbox/Papers/RTSS2021/cachesim/build'
 Build commands will be stored in build/compile_commands.json
-'build' finished successfully (0.045s)
+'build' finished successfully (0.989s)
 
 CpuCore       0, Clk (NanoSec) = 100, Clk-Skew (ns) = 0
 PrivCacheCtrl 0, Clk (NanoSec) = 100, Clk-Skew (ns) = 40, Req2Writeback Ratio = 1 %
@@ -25,16 +31,16 @@ SharedMemCtrl 10, Clk (NanoSec) = 100, Clk-Skew = (ns) 0
 SharedMem: [Info] Cache State, Owner Initialization
 
 SharedMem: [Info] Load benchmark file
-	/home/rmirosan/Dropbox/Papers/RTSS2021/cachesim-master/BM/trace_C0.trc.shared
+	/home/rmirosan/Dropbox/Papers/RTSS2021/test/CacheSim/BM/trace_C0.trc.shared
 
 SharedMem: [Info] Load benchmark file
-	/home/rmirosan/Dropbox/Papers/RTSS2021/cachesim-master/BM/trace_C1.trc.shared
+	/home/rmirosan/Dropbox/Papers/RTSS2021/test/CacheSim/BM/trace_C1.trc.shared
 
 SharedMem: [Info] Load benchmark file
-	/home/rmirosan/Dropbox/Papers/RTSS2021/cachesim-master/BM/trace_C2.trc.shared
+	/home/rmirosan/Dropbox/Papers/RTSS2021/test/CacheSim/BM/trace_C2.trc.shared
 
 SharedMem: [Info] Load benchmark file
-	/home/rmirosan/Dropbox/Papers/RTSS2021/cachesim-master/BM/trace_C3.trc.shared
+	/home/rmirosan/Dropbox/Papers/RTSS2021/test/CacheSim/BM/trace_C3.trc.shared
 All data loaded in L2 Cache
 Cpu 0 MemReq: ReqId = 1, CpuRefCycle = 0, CpuClkTic ==================================================== 2
 		MemAddr = 140733183194072, ReqType (0:Read, 1:Write) = 1, CpuTxFIFO Size = 1
